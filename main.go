@@ -15,6 +15,8 @@ func main() {
 	//PrintAndListen()
 }
 
+// TODO: Add proper functionality to the different cases
+
 // Print all available options and listen for input.
 func PrintAndListen() {
 	var input string
