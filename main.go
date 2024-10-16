@@ -10,7 +10,10 @@ import (
 
 func main() {
 	// Connect to Postgress DB
-	database.Connect()
+    err := database.Connect()
+    if err != nil {
+        panic(err)
+    }
 
 	//PrintAndListen()
 }

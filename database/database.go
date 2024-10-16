@@ -3,60 +3,71 @@ package database
 import (
 	"context"
 	"fmt"
-	"os"
+	//"os"
 
 	"github.com/devkaare/basic-postgres-demo/config"
 	"github.com/jackc/pgx/v5"
 )
 
 type Entry struct {
-	UserID   int
+	ID       int
 	Username string
 	Email    string
 	Password string
 }
 
-// Connect to Postgress DB.
-func Connect() {
-	// Load the DB connection URL
-	connURL := config.Config("BASIC_POSTGRES_DEMO_DATABASE_URL")
+var DB *pgx.Conn
 
-	// Open DB connection
-	conn, err := pgx.Connect(context.Background(), connURL)
+// Connect to Postgress database.
+func Connect() error {
+	// Load the database DBection URL.
+	connURL := config.Config("BASIC_POSTGRES_DEMO_URL")
+
+	// Open database DBection.
+	DB, err := pgx.Connect(context.Background(), connURL)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
+		return err
+		//fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		//os.Exit(1)
 	}
-	defer conn.Close(context.Background())
+	defer DB.Close(context.Background())
 
+	//CreateEntryTable()
+
+	fmt.Println("Connection Opend to Database")
 	var greeting string
-	err = conn.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
+	err = DB.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		os.Exit(1)
+		return err
+		//fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
+		//os.Exit(1)
 	}
 
 	fmt.Println(greeting)
+	return nil
 }
 
-// Fetch all entries in the DB.
-func FetchEntries() []Entry {
+//create table if not exists entries (
+//id integer primary key,
+//username text unique not null,
+//email text not null,
+//password text not null
+//)
+
+// Get all entries in the database.
+func GetEntries() []Entry {
 	return []Entry{}
 }
 
-// Fetch Entry (if found) with given UserID.
-func FetchEntryByID(id int) Entry {
+// Get entry (if found) with given UserID.
+func GetEntryByID(id int) Entry {
 	return Entry{}
 }
 
-// Delete Entry (if found) with given UserID.
-// Returns true if Entry was deleted, and false if not.
-func DeleteEntryByID(id int) bool {
-	return false
+// Delete entry (if found) with given UserID.
+func DeleteEntryByID(id int) {
 }
 
-// Insert Entry into the DB.
-// Returns true if Entry was inserted, and false if not.
-func InsertEntry(u *Entry) bool {
-	return false
+// Add entry into the database.
+func AddEntry(u *Entry) {
 }
