@@ -4,16 +4,29 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 
 	"github.com/devkaare/basic-postgres-demo/database"
 )
 
 func main() {
-	// Connect to Postgress DB
-    err := database.Connect()
-    if err != nil {
-        panic(err)
-    }
+	// Connect to database and get a connection
+	connection, err := database.Connect()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Connecting to database failed: %v\n", err)
+		os.Exit(1)
+	}
+
+    fmt.Println("Connected to database")
+
+    // Pass database connection
+    entry, err := database.GetEntryByID(1, connection)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "GetEntryByID failed: %v\n", err)
+		os.Exit(1)
+	}
+
+    fmt.Printf("Found entry: %+v\n", entry)
 
 	//PrintAndListen()
 }

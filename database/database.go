@@ -2,8 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
-	//"os"
 
 	"github.com/devkaare/basic-postgres-demo/config"
 	"github.com/jackc/pgx/v5"
@@ -16,57 +14,52 @@ type Entry struct {
 	Password string
 }
 
-var DB *pgx.Conn
-
-// Connect to Postgress database.
-func Connect() error {
-	// Load the database URL.
-	connURL := config.Config("BASIC_POSTGRES_DEMO_DATABASE_URL")
-
-	DB, err := pgx.Connect(context.Background(), connURL)
+// Connect to Postgress database
+func Connect() (*pgx.Conn, error) {
+	// Load the database connection url and connect to database
+	connection, err := pgx.Connect(context.Background(), config.Config("BASIC_POSTGRES_DEMO_DATABASE_URL")) // Load the database url from .env
 	if err != nil {
-		return err
-		//fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		//os.Exit(1)
+		return nil, err
 	}
-	defer DB.Close(context.Background())
+	// NOTE: This program doesn't use any concurrency so passing around the database connection is fine!!!
+	//defer connection.Close(context.Background())
 
-	//CreateEntryTable()
-
-	fmt.Println("Connection Opend to Database")
-	var greeting string
-	err = DB.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
-	if err != nil {
-		return err
-		//fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		//os.Exit(1)
+	if err := connection.Ping(context.Background()); err != nil {
+		return nil, err
 	}
 
-	fmt.Println(greeting)
-	return nil
+	// Return database connection
+	return connection, nil
 }
 
-//create table if not exists entries (
-//id integer primary key,
-//username text unique not null,
-//email text not null,
-//password text not null
-//)
-
-// Get all entries in the database.
+// Get all entries in the database
 func GetEntries() []Entry {
 	return []Entry{}
 }
 
-// Get entry (if found) with given UserID.
-func GetEntryByID(id int) Entry {
-	return Entry{}
+// Get entry (if found) with given UserID
+func GetEntryByID(id int, connection *pgx.Conn) (*Entry, error) {
+	entry := &Entry{}
+
+	// Populate entry with fields returned by database
+	err := connection.QueryRow(context.Background(), "select * from entry where id=$1", 1).Scan(
+		&entry.ID,
+		&entry.Username,
+		&entry.Email,
+		&entry.Password,
+	)
+	if err != nil {
+		return entry, err
+	}
+
+	return entry, nil
+
 }
 
-// Delete entry (if found) with given UserID.
+// Delete entry (if found) with given UserID
 func DeleteEntryByID(id int) {
 }
 
-// Add entry into the database.
+// Add entry into the database
 func AddEntry(u *Entry) {
 }
