@@ -17,16 +17,16 @@ func main() {
 		os.Exit(1)
 	}
 
-    fmt.Println("Connected to database")
+	fmt.Println("Connected to database")
 
-    // Pass database connection
-    entry, err := database.GetEntryByID(1, connection)
+	// Pass database connection
+	entry, err := database.GetEntryByID(1, connection)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "GetEntryByID failed: %v\n", err)
 		os.Exit(1)
 	}
 
-    fmt.Printf("Found entry: %+v\n", entry)
+	fmt.Printf("Found entry: %+v\n", entry)
 
 	//PrintAndListen()
 }
