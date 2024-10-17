@@ -26,14 +26,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Found entry: %+v\n", entry)
+	PrintEntryInFormat(entry)
 
 	//PrintAndListen()
 }
 
 // TODO: Add proper functionality to the different cases
 
-// Print all available options and listen for input.
+// Print all available options and listen for input
 func PrintAndListen() {
 	var input string
 	fmt.Print("What would you like to do?\n1: Fetch all entries\n2: Fetch entry by ID\n3: Delete user by ID\n4: Create NEW user\nEnter the number associated with the action you want to preform:\n")
@@ -57,4 +57,13 @@ func PrintAndListen() {
 // Generate a random ID from 0 - 9223372036854775807
 func GenID() int {
 	return rand.Intn(math.MaxInt)
+}
+
+// Print entry in a custom format
+func PrintEntryInFormat(entry *database.Entry) {
+    fmt.Printf("Found data for ID: %d successfully!\n", entry.ID)
+	fmt.Printf("ID:             %d\n", entry.ID)
+	fmt.Printf("Username:       %s\n", entry.Username)
+	fmt.Printf("Email:          %s\n", entry.Email)
+    fmt.Printf("Password:       %s\n", entry.Password)
 }
