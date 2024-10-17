@@ -21,7 +21,7 @@ var DB *pgx.Conn
 // Connect to Postgress database.
 func Connect() error {
 	// Load the database URL.
-	connURL := config.Config("BASIC_POSTGRES_DEMO_URL")
+	connURL := config.Config("BASIC_POSTGRES_DEMO_DATABASE_URL")
 
 	DB, err := pgx.Connect(context.Background(), connURL)
 	if err != nil {
