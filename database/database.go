@@ -19,7 +19,7 @@ type Connection *pgx.Conn
 
 // Connect to Postgress database
 func Connect() (Connection, error) {
-    var connection Connection
+	var connection Connection
 	// Load the database connection url and connect to database
 	connection, err := pgx.Connect(context.Background(), config.Config("BASIC_POSTGRES_DEMO_DATABASE_URL")) // Load the database url from .env
 	if err != nil {
@@ -33,43 +33,38 @@ func Connect() (Connection, error) {
 }
 
 // Get all entries in the database
-func GetEntries(connection *pgx.Conn) ([]Entry, error){
-    rows, err := connection.Query(context.Background(), "select * from entry")
-    if err != nil {
-        return []Entry{}, err
-    }
-    defer rows.Close()
+func GetEntries(connection *pgx.Conn) ([]Entry, error) {
+	rows, err := connection.Query(context.Background(), "select * from entry")
+	if err != nil {
+		return []Entry{}, err
+	}
+	defer rows.Close()
 
-    var entries []Entry 
+	var entries []Entry
 
-    for rows.Next() {
-        var entry Entry
+	for rows.Next() {
+		var entry Entry
 
-        if err := rows.Scan(&entry.ID, &entry.Username, &entry.Email, &entry.Password); err != nil {
-            return entries, err
-        }
+		if err := rows.Scan(&entry.ID, &entry.Username, &entry.Email, &entry.Password); err != nil {
+			return entries, err
+		}
 
-        entries = append(entries, entry)
-    }
-    if err = rows.Err(); err != nil {
-        return entries, err
-    }
+		entries = append(entries, entry)
+	}
+	if err = rows.Err(); err != nil {
+		return entries, err
+	}
 
-    return []Entry{}, nil
+	return entries, nil
 }
 
+// TODO: Fix this to check if exists before scanning
 // Get entry (if found) with given UserID
 func GetEntryByID(id int, connection *pgx.Conn) (Entry, error) {
-    var entry Entry
+	var entry Entry
 
 	// Populate entry with fields returned by database
-	err := connection.QueryRow(context.Background(), "select * from entry where id = $1", id).Scan(
-		&entry.ID,
-		&entry.Username,
-		&entry.Email,
-		&entry.Password,
-	)
-	if err != nil {
+	if err := connection.QueryRow(context.Background(), "select * from entry where id = $1", id).Scan(&entry.ID, &entry.Username, &entry.Email, &entry.Password); err != nil {
 		return entry, err
 	}
 
@@ -78,26 +73,19 @@ func GetEntryByID(id int, connection *pgx.Conn) (Entry, error) {
 
 // Delete entry (if found) with given UserID
 func DeleteEntryByID(id int, connection *pgx.Conn) error {
-    _, err := connection.Exec(context.Background(), "delete from entry where id = $1", id)
-    // I don't need result for anything, hence _ above
-    if err != nil {
-        return err
-    }
+	if _, err := connection.Exec(context.Background(), "delete from entry where id = $1", id); err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
+// TODO: Update AddEntry to accept entries instead of strings
 // Add entry into the database
 func AddEntry(id int, username, email, password string, connection *pgx.Conn) error {
-    _, err := connection.Exec(context.Background(), "insert into entry (id, username, email, password) values ($1, $2, $3, $4)",
-        id,
-        username,
-        email,
-        password,
-    )
-    if err != nil {
-        return err
-    }
+	if _, err := connection.Exec(context.Background(), "insert into entry (id, username, email, password) values ($1, $2, $3, $4)", id, username, email, password); err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }

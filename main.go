@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"math"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 
 	"github.com/devkaare/basic-postgres-demo/database"
@@ -60,39 +59,54 @@ func GetInput() {
 		PrintOptions()
 	case "1":
 		{
-			fmt.Println("You chose to GetEntries")
+			// Get all entries
+			entries, err := database.GetEntries(connection)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "GetEntries failed: %v\n", err)
+			}
+
+			// Print all entries
+			for _, entry := range entries {
+				PrintEntry(entry)
+			}
+
+			// Print total amount of entries
+			total := len(entries)
+			fmt.Println("Total amount of entries:", total)
+
+			fmt.Println("Successfully got all entries!")
 		}
 	case "2":
 		{
-			// Get more input
+			// Get entry details
 			username, email, password, err := GetMoreInput()
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "GetMoreInput failed: %v\n", err)
 				os.Exit(1)
 			}
 
-			// Gen a unique ID from 0 - 9223372036854775807
-			uniqueID := rand.Intn(math.MaxInt)
+			// Gen a unique ID
+			uniqueID := rand.IntN(2147483647) // Postgres integer can hold -2147483648 to +2147483647
 
-            //// Create entry 
-            //entry := database.Entry {
-                //ID: uniqueID,
-                //Username: username,
-                //Email: email,
-                //Password: password,
-            //}
+			//entry := database.Entry {
+			//ID: uniqueID,
+			//Username: username,
+			//Email: email,
+			//Password: password,
+			//}
 
 			// Add entry to database
-            err = database.AddEntry(uniqueID, username, email, password, connection)
-			if err != nil {
+			if err = database.AddEntry(uniqueID, username, email, password, connection); err != nil {
 				fmt.Fprintf(os.Stderr, "AddEntry failed: %v\n", err)
 				os.Exit(1)
 			}
+
+			fmt.Println("Successfully created entry!")
 		}
 	case "3":
 		{
-            // Get ID
-			fmt.Println("Enter ID:")
+			// Get ID
+			fmt.Println("Get, Enter ID:")
 			var inputID int
 
 			if _, err := fmt.Scanln(&inputID); err != nil {
@@ -100,19 +114,36 @@ func GetInput() {
 				os.Exit(1)
 			}
 
-            // Get entry
+			// Get entry
 			entry, err := database.GetEntryByID(inputID, connection) // Pass the database connection
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "GetEntryByID failed: %v\n", err)
 				os.Exit(1)
 			}
 
-            // Print result
+			// Print result
 			PrintEntry(entry)
+
+			fmt.Println("Successfully got entry!")
 		}
 	case "4":
 		{
-			fmt.Println("You chose to DeleteEntryByID")
+			// Get ID
+			fmt.Println("Delete, Enter ID:")
+			var inputID int
+
+			if _, err := fmt.Scanln(&inputID); err != nil {
+				fmt.Fprintf(os.Stderr, "GetInput failed: %v\n", err)
+				os.Exit(1)
+			}
+
+			// Get entry
+			if err := database.DeleteEntryByID(inputID, connection); err != nil {
+				fmt.Fprintf(os.Stderr, "GetEntryByID failed: %v\n", err)
+				os.Exit(1)
+			}
+
+			fmt.Println("Successfully deleted entry!")
 		}
 	default:
 		fmt.Println("Invalid option")
