@@ -64,7 +64,7 @@ func GetEntryByID(id int, connection *pgx.Conn) (Entry, error) {
 	var entry Entry
 
 	// Populate entry with fields returned by database
-	if err := connection.QueryRow(context.Background(), "select * from entry where id = $1", id).Scan(&entry.ID, &entry.Username, &entry.Email, &entry.Password); err != nil {
+	if err := connection.QueryRow(context.Background(), "select * from entry where id = $1", id).Scan(&entry.ID, &entry.Username, &entry.Email, &entry.Password); err != nil && err != pgx.ErrNoRows {
 		return entry, err
 	}
 
