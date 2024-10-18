@@ -16,8 +16,7 @@ type Option struct {
 var connection = database.Connection
 
 func main() {
-	// Required so the compiler doesn't complain when calling database.Connect
-	var err error
+	var err error // Required so the compiler doesn't complain below
 
 	// Connect to database and get a connection
 	connection, err = database.Connect()
