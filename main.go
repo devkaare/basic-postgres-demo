@@ -2,16 +2,21 @@ package main
 
 import (
 	"fmt"
-	//"math"
-	//"math/rand"
+	"math"
+	"math/rand"
 	"os"
 
 	"github.com/devkaare/basic-postgres-demo/database"
 )
 
+var connection database.Connection
+
 func main() {
+	// Required so the compiler doesn't complain when calling database.Connect
+	var err error
+
 	// Connect to database and get a connection
-	connection, err := database.Connect()
+	connection, err = database.Connect()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Connecting to database failed: %v\n", err)
 		os.Exit(1)
@@ -19,23 +24,17 @@ func main() {
 
 	fmt.Println("Connected to database")
 
-	// Pass database connection
-	entry, err := database.GetEntryByID(1, connection)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "GetEntryByID failed: %v\n", err)
-		os.Exit(1)
+	// Print options
+	PrintOptions()
+
+	// Start listening for input
+	for {
+		GetInput()
 	}
-
-	PrintWithFormat(entry)
-
-	//GetInput()
 }
 
-// TODO: Add proper functionality to the different cases
-
-// Print all available options and listen for input
-func GetInput() {
-	var input string
+// Print available options 1 - 4
+func PrintOptions() {
 	fmt.Print(
 		"What would you like to do?\n",
 		"1: Get all entries\n",
@@ -44,37 +43,84 @@ func GetInput() {
 		"4: Delete entry by ID\n",
 		"Enter the number displayed beside your choice:\n",
 	)
+}
+
+// Listen and handle input 1 - 4
+func GetInput() {
+	fmt.Println("NOTE: Type help to refresh list of choices")
+
+	var input string
 	if _, err := fmt.Scanln(&input); err != nil {
 		fmt.Fprintf(os.Stderr, "GetInput failed: %v\n", err)
 		os.Exit(1)
 	}
 
 	switch input {
+	case "help":
+		PrintOptions()
 	case "1":
-		fmt.Println("You chose to GetEntries")
-	case "2":
-		fmt.Println("You chose to GetMoreInput")
-		username, email, password, err := GetMoreInput()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "GetMoreInput failed: %v\n", err)
-			os.Exit(1)
+		{
+			fmt.Println("You chose to GetEntries")
 		}
-        
-        // Add entry to database
-        fmt.Println(username, email, password)
+	case "2":
+		{
+			// Get more input
+			username, email, password, err := GetMoreInput()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "GetMoreInput failed: %v\n", err)
+				os.Exit(1)
+			}
+
+			// Gen a unique ID from 0 - 9223372036854775807
+			uniqueID := rand.Intn(math.MaxInt)
+
+            //// Create entry 
+            //entry := database.Entry {
+                //ID: uniqueID,
+                //Username: username,
+                //Email: email,
+                //Password: password,
+            //}
+
+			// Add entry to database
+            err = database.AddEntry(uniqueID, username, email, password, connection)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "AddEntry failed: %v\n", err)
+				os.Exit(1)
+			}
+		}
 	case "3":
-		fmt.Println("You chose to GetEntryByID")
+		{
+            // Get ID
+			fmt.Println("Enter ID:")
+			var inputID int
+
+			if _, err := fmt.Scanln(&inputID); err != nil {
+				fmt.Fprintf(os.Stderr, "GetInput failed: %v\n", err)
+				os.Exit(1)
+			}
+
+            // Get entry
+			entry, err := database.GetEntryByID(inputID, connection) // Pass the database connection
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "GetEntryByID failed: %v\n", err)
+				os.Exit(1)
+			}
+
+            // Print result
+			PrintEntry(entry)
+		}
 	case "4":
-		fmt.Println("You chose to DeleteEntryByID")
+		{
+			fmt.Println("You chose to DeleteEntryByID")
+		}
+	default:
+		fmt.Println("Invalid option")
+		os.Exit(1)
 	}
 }
 
-// Generate a random ID from 0 - 9223372036854775807
-//func GenID() int {
-//return rand.Intn(math.MaxInt)
-//}
-
-// Print required fields and listen for input
+// Listen and handle input for creating a new entry
 func GetMoreInput() (string, string, string, error) {
 	var username, email, password string
 
@@ -100,7 +146,7 @@ func GetMoreInput() (string, string, string, error) {
 }
 
 // Print entry in a custom format
-func PrintWithFormat(entry *database.Entry) {
+func PrintEntry(entry database.Entry) {
 	//
 	fmt.Printf("Found data for ID: %d successfully!\n", entry.ID)
 	fmt.Printf("ID:             %d\n", entry.ID)
