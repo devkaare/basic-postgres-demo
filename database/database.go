@@ -8,7 +8,7 @@ import (
 )
 
 type Entry struct {
-	ID       int
+	ID       int32 // Postgres integer can hold -2147483648 to +2147483647 so using int32
 	Username string
 	Email    string
 	Password string
@@ -34,14 +34,16 @@ func Connect() (Connection, error) {
 
 // Get all entries in the database
 func GetEntries(connection *pgx.Conn) ([]Entry, error) {
+	var entries []Entry
+
+	// Send query to database and get a row with results
 	rows, err := connection.Query(context.Background(), "select * from entry")
 	if err != nil {
-		return []Entry{}, err
+		return entries, err
 	}
 	defer rows.Close()
 
-	var entries []Entry
-
+	// Loop over rows, create entry and append it to entries
 	for rows.Next() {
 		var entry Entry
 
@@ -51,6 +53,8 @@ func GetEntries(connection *pgx.Conn) ([]Entry, error) {
 
 		entries = append(entries, entry)
 	}
+
+	// Check rows error after its closed
 	if err = rows.Err(); err != nil {
 		return entries, err
 	}
@@ -58,7 +62,6 @@ func GetEntries(connection *pgx.Conn) ([]Entry, error) {
 	return entries, nil
 }
 
-// TODO: Fix this to check if exists before scanning
 // Get entry (if found) with given UserID
 func GetEntryByID(id int, connection *pgx.Conn) (Entry, error) {
 	var entry Entry
@@ -80,10 +83,9 @@ func DeleteEntryByID(id int, connection *pgx.Conn) error {
 	return nil
 }
 
-// TODO: Update AddEntry to accept entries instead of strings
 // Add entry into the database
-func AddEntry(id int, username, email, password string, connection *pgx.Conn) error {
-	if _, err := connection.Exec(context.Background(), "insert into entry (id, username, email, password) values ($1, $2, $3, $4)", id, username, email, password); err != nil {
+func AddEntry(entry Entry, connection *pgx.Conn) error {
+	if _, err := connection.Exec(context.Background(), "insert into entry (id, username, email, password) values ($1, $2, $3, $4)", entry.ID, entry.Username, entry.Email, entry.Password); err != nil {
 		return err
 	}
 

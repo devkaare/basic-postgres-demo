@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Load key (if found) from the .env file.
+// Load key (if found) from .env
 func Config(key string) string {
 	err := godotenv.Load()
 	if err != nil {

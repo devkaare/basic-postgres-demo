@@ -44,21 +44,34 @@ func PrintOptions() {
 	)
 }
 
+// Print entry in a custom format
+func PrintEntry(entry database.Entry) {
+	fmt.Printf("ID:             %d\n", entry.ID)
+	fmt.Printf("Username:       %s\n", entry.Username)
+	fmt.Printf("Email:          %s\n", entry.Email)
+	fmt.Printf("Password:       %s\n", entry.Password)
+}
+
 // Listen and handle input 1 - 4
 func GetInput() {
-	fmt.Println("NOTE: Type help to refresh list of choices")
-
 	var input string
 	if _, err := fmt.Scanln(&input); err != nil {
 		fmt.Fprintf(os.Stderr, "GetInput failed: %v\n", err)
 		os.Exit(1)
 	}
 
-	switch input {
-	case "help":
+	// Check if input was help early so it doesn't need to check all the switch cases
+	if input == "help" {
 		PrintOptions()
+		return
+	}
+
+	// Check and execute selected option
+	switch input {
 	case "1":
 		{
+			fmt.Println("SELECTED: Get all entries")
+
 			// Get all entries
 			entries, err := database.GetEntries(connection)
 			if err != nil {
@@ -67,46 +80,60 @@ func GetInput() {
 
 			// Print all entries
 			for _, entry := range entries {
-				PrintEntry(entry)
+				fmt.Printf("%+v\n", entry)
 			}
 
 			// Print total amount of entries
-			total := len(entries)
-			fmt.Println("Total amount of entries:", total)
+			fmt.Println("INFO: Total amount of entries:", len(entries))
 
-			fmt.Println("Successfully got all entries!")
+			fmt.Println("SUCCESS: Successfully got all entries!")
 		}
 	case "2":
 		{
-			// Get entry details
-			username, email, password, err := GetMoreInput()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "GetMoreInput failed: %v\n", err)
+			fmt.Println("SELECTED: Create new entry")
+
+			// Create database entry struct
+			entry := database.Entry{}
+
+			// Populate entry with ID, Username, Email and Password
+			// Get ID
+			entry.ID = rand.Int32()
+
+			// Get username
+			fmt.Println("INPUT: Enter a username:")
+			if _, err := fmt.Scanln(&entry.Username); err != nil {
 				os.Exit(1)
 			}
 
-			// Gen a unique ID
-			uniqueID := rand.IntN(2147483647) // Postgres integer can hold -2147483648 to +2147483647
+			// Get email
+			fmt.Println("INPUT: Enter a email:")
+			if _, err := fmt.Scanln(&entry.Email); err != nil {
+				os.Exit(1)
+			}
 
-			//entry := database.Entry {
-			//ID: uniqueID,
-			//Username: username,
-			//Email: email,
-			//Password: password,
-			//}
+			// Get password
+			fmt.Println("INPUT: Enter a password:")
+			if _, err := fmt.Scanln(&entry.Password); err != nil {
+				fmt.Fprintf(os.Stderr, "CreateEntry failed: %v\n", err)
+				os.Exit(1)
+			}
 
 			// Add entry to database
-			if err = database.AddEntry(uniqueID, username, email, password, connection); err != nil {
+			if err := database.AddEntry(entry, connection); err != nil {
 				fmt.Fprintf(os.Stderr, "AddEntry failed: %v\n", err)
 				os.Exit(1)
 			}
 
-			fmt.Println("Successfully created entry!")
+			fmt.Println("INFO: New ID:", entry.ID)
+
+			fmt.Println("SUCCESS: Successfully created entry!")
 		}
 	case "3":
 		{
+			fmt.Println("SELECTED: Get entry by ID")
+
 			// Get ID
-			fmt.Println("Get, Enter ID:")
+			fmt.Println("INPUT: Enter ID:")
 			var inputID int
 
 			if _, err := fmt.Scanln(&inputID); err != nil {
@@ -121,15 +148,17 @@ func GetInput() {
 				os.Exit(1)
 			}
 
-			// Print result
-			PrintEntry(entry)
+			// Print entry
+			fmt.Printf("%+v\n", entry)
 
-			fmt.Println("Successfully got entry!")
+			fmt.Println("SUCCESS: Successfully got entry!")
 		}
 	case "4":
 		{
+			fmt.Println("SELECTED: Delete entry by ID")
+
 			// Get ID
-			fmt.Println("Delete, Enter ID:")
+			fmt.Println("INPUT: Enter ID:")
 			var inputID int
 
 			if _, err := fmt.Scanln(&inputID); err != nil {
@@ -139,49 +168,15 @@ func GetInput() {
 
 			// Get entry
 			if err := database.DeleteEntryByID(inputID, connection); err != nil {
-				fmt.Fprintf(os.Stderr, "GetEntryByID failed: %v\n", err)
+				fmt.Fprintf(os.Stderr, "DeleteEntryByID failed: %v\n", err)
 				os.Exit(1)
 			}
 
-			fmt.Println("Successfully deleted entry!")
+			fmt.Println("SUCCESS: Successfully deleted entry!")
 		}
 	default:
-		fmt.Println("Invalid option")
-		os.Exit(1)
+		{
+			fmt.Println("INVALID: Invalid option entered!")
+		}
 	}
-}
-
-// Listen and handle input for creating a new entry
-func GetMoreInput() (string, string, string, error) {
-	var username, email, password string
-
-	// Username
-	fmt.Println("Enter a username:")
-	if _, err := fmt.Scanln(&username); err != nil {
-		return "", "", "", err
-	}
-
-	// Email
-	fmt.Println("Enter a email:")
-	if _, err := fmt.Scanln(&email); err != nil {
-		return "", "", "", err
-	}
-
-	// Password
-	fmt.Println("Enter a password:")
-	if _, err := fmt.Scanln(&password); err != nil {
-		return "", "", "", err
-	}
-
-	return username, email, password, nil
-}
-
-// Print entry in a custom format
-func PrintEntry(entry database.Entry) {
-	//
-	fmt.Printf("Found data for ID: %d successfully!\n", entry.ID)
-	fmt.Printf("ID:             %d\n", entry.ID)
-	fmt.Printf("Username:       %s\n", entry.Username)
-	fmt.Printf("Email:          %s\n", entry.Email)
-	fmt.Printf("Password:       %s\n", entry.Password)
 }
